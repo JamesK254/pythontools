@@ -5,7 +5,7 @@ from time import sleep
 ses = lt.session()
 
 # set the listen and outgoing interfaces
-ses.set_settings({
+ses.apply_settings({
     "listen_interfaces": "0.0.0.0:6881",
     "outgoing_interfaces": "0.0.0.0"
 })
