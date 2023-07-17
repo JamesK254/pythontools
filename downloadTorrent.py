@@ -4,9 +4,7 @@ def download_torrent(torrent_file_path, save_path):
     ses = lt.session()
     params = {
         'save_path': save_path,
-        'storage_mode': lt.storage_mode_t(2),  # storage_mode_t(2) = StorageMode(allocate)
-        'paused': False,
-        'auto_managed': True,
+        'storage_mode': lt.storage_mode_t(2),  # storage_mode_t(2) = StorageMode(allocate_sparse)
         'duplicate_is_error': True
     }
 
@@ -33,7 +31,9 @@ def download_torrent(torrent_file_path, save_path):
     except Exception as e:
         print(f"Error: {e}")
     finally:
-        ses.remove_torrent(handle)
+        # The 'handle' variable should be defined before attempting to remove it
+        if 'handle' in locals():
+            ses.remove_torrent(handle)
 
 if __name__ == "__main__":
     # Replace the following torrent_file_path and save_path with your desired values
