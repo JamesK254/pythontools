@@ -4,15 +4,22 @@ from time import sleep
 # create a session object
 ses = lt.session()
 
-# listen on a port range
-ses.listen_on(6881, 6891)
+# set the listen and outgoing interfaces
+ses.set_settings({
+    "listen_interfaces": "0.0.0.0:6881",
+    "outgoing_interfaces": "0.0.0.0"
+})
 
 # create a torrent info object from a torrent file
 torrent_file = "./payback.torrent"
 info = lt.torrent_info(torrent_file)
 
 # create a torrent handle from the torrent info object
-handle = ses.add_torrent({"ti": info})
+params = {
+    "ti": info,
+    "save_path": "./torrents"
+}
+handle = ses.add_torrent(params)
 
 # print some info
 print("Name:", info.name())
@@ -20,12 +27,10 @@ print("Size:", info.total_size())
 print("Files:", info.num_files())
 print("Trackers:", info.num_trackers())
 
-# set the download path
-path = "./torrents"
+# set the download and upload limits
 handle.set_download_limit(0) # unlimited download speed
 handle.set_upload_limit(0) # unlimited upload speed
 handle.set_sequential_download(True) # download pieces in order
-handle.move_storage(path) # move the files to the download path
 
 # start downloading
 print("Downloading...")
