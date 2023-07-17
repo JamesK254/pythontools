@@ -1,14 +1,14 @@
 # import libtorrent
 import libtorrent as lt
 from time import sleep
+from IPython.display import display
+import ipywidgets as widgets
 # create a session object
 ses = lt.session()
 
 # set the listen and outgoing interfaces
-ses.apply_settings({
-    "listen_interfaces": "0.0.0.0:6881",
-    "outgoing_interfaces": "0.0.0.0"
-})
+ses.listen_on(6881, 6891)
+downloads = []
 
 # create a torrent info object from a torrent file
 torrent_file = "./payback.torrent"
@@ -19,34 +19,50 @@ params = {
     "ti": info,
     "save_path": "./torrents"
 }
-handle = ses.add_torrent(params)
+downloads.append(ses.add_torrent(params))
 
-# print some info
-print("Name:", info.name())
-print("Size:", info.total_size())
-print("Files:", info.num_files())
-# print("Trackers:", len(info.trackers()))
+state_str = [
+    "queued",
+    "checking",
+    "downloading metadata",
+    "downloading",
+    "finished",
+    "seeding",
+    "allocating",
+    "checking fastresume",
+]
 
+layout = widgets.Layout(width="auto")
+style = {"description_width": "initial"}
+download_bars = [
+    widgets.FloatSlider(
+        step=0.01, disabled=True, layout=layout, style=style
+    )
+    for _ in downloads
+]
+display(*download_bars)
 
-# set the download and upload limits
-handle.set_download_limit(0) # unlimited download speed
-handle.set_upload_limit(0) # unlimited upload speed
-handle.set_sequential_download(True) # download pieces in order
+while downloads:
+    next_shift = 0
+    for index, download in enumerate(downloads[:]):
+        bar = download_bars[index + next_shift]
+        if not download.is_seed():
+            s = download.status()
 
-# start downloading
-print("Downloading...")
-while not handle.is_seed():
-    # get the status of the download
-    status = handle.status()
-    # print some status info
-    print("Progress: %.2f%%" % (status.progress * 100))
-    print("Download rate: %.2f KB/s" % (status.download_rate / 1024))
-    print("Upload rate: %.2f KB/s" % (status.upload_rate / 1024))
-    print("Peers: %d" % status.num_peers)
-    print("Seeds: %d" % status.num_seeds)
-    print("State:", status.state)
-    # wait for a second
+            bar.description = " ".join(
+                [
+                    download.name(),
+                    str(s.download_rate / 1000),
+                    "kB/s",
+                    state_str[s.state],
+                ]
+            )
+            bar.value = s.progress * 100
+        else:
+            next_shift -= 1
+            ses.remove_torrent(download)
+            downloads.remove(download)
+            bar.close()
+            download_bars.remove(bar)
+            print(download.name(), "complete")
     sleep(1)
-
-# download finished
-print("Download finished.")
