@@ -25,7 +25,7 @@ handle = ses.add_torrent(params)
 print("Name:", info.name())
 print("Size:", info.total_size())
 print("Files:", info.num_files())
-print("Trackers:", len(info.trackers))
+print("Trackers:", len(info.trackers()))
 
 
 # set the download and upload limits
