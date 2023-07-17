@@ -1,43 +1,46 @@
+# import libtorrent
 import libtorrent as lt
+from time import sleep
+# create a session object
+ses = lt.session()
 
-def download_torrent(torrent_file_path, save_path):
-    ses = lt.session()
-    params = {
-        'save_path': save_path,
-        'storage_mode': lt.storage_mode_t(2),  # storage_mode_t(2) = StorageMode(allocate_sparse)
-        'duplicate_is_error': True
-    }
+# listen on a port range
+ses.listen_on(6881, 6891)
 
-    try:
-        # Add the torrent to the session
-        handle = lt.add_magnet_uri(ses, torrent_file_path, params)
+# create a torrent info object from a torrent file
+torrent_file = "./payback.torrent"
+info = lt.torrent_info(torrent_file)
 
-        print("Downloading torrent. Press Ctrl+C to stop.")
-        while not handle.is_seed():
-            s = handle.status()
+# create a torrent handle from the torrent info object
+handle = ses.add_torrent({"ti": info})
 
-            state_str = ['queued', 'checking', 'downloading metadata', 'downloading', 'finished', 'seeding', 'allocating']
-            print(f"\r{handle.name()} - {state_str[s.state]} - Progress: {s.progress * 100:.2f}% - "
-                  f"Download Speed: {s.download_rate / 1024:.2f} KB/s - "
-                  f"Upload Speed: {s.upload_rate / 1024:.2f} KB/s", end=' ')
+# print some info
+print("Name:", info.name())
+print("Size:", info.total_size())
+print("Files:", info.num_files())
+print("Trackers:", info.num_trackers())
 
-            alerts = ses.pop_alerts()
-            for alert in alerts:
-                if alert.category() & lt.alert.category_t.error_notification:
-                    print(alert)
+# set the download path
+path = "./torrents"
+handle.set_download_limit(0) # unlimited download speed
+handle.set_upload_limit(0) # unlimited upload speed
+handle.set_sequential_download(True) # download pieces in order
+handle.move_storage(path) # move the files to the download path
 
-    except KeyboardInterrupt:
-        print("\nTorrent download stopped by the user.")
-    except Exception as e:
-        print(f"Error: {e}")
-    finally:
-        # The 'handle' variable should be defined before attempting to remove it
-        if 'handle' in locals():
-            ses.remove_torrent(handle)
+# start downloading
+print("Downloading...")
+while not handle.is_seed():
+    # get the status of the download
+    status = handle.status()
+    # print some status info
+    print("Progress: %.2f%%" % (status.progress * 100))
+    print("Download rate: %.2f KB/s" % (status.download_rate / 1024))
+    print("Upload rate: %.2f KB/s" % (status.upload_rate / 1024))
+    print("Peers: %d" % status.num_peers)
+    print("Seeds: %d" % status.num_seeds)
+    print("State:", status.state)
+    # wait for a second
+    sleep(1)
 
-if __name__ == "__main__":
-    # Replace the following torrent_file_path and save_path with your desired values
-    torrent_file_path = "./payback.torrent"
-    save_path = "./torrents/"
-
-    download_torrent(torrent_file_path, save_path)
+# download finished
+print("Download finished.")
