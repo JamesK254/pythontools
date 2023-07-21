@@ -44,3 +44,5 @@ if __name__ == "__main__":
     save_file_path = f"./{file_name}"
 
     download_rar_file(download_url, save_file_path)
+
+# https://olarila.com/files/Torrents/Olarila Ventura 13.4.1.raw.torrent
