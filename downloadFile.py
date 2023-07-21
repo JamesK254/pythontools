@@ -39,7 +39,8 @@ def download_rar_file(url, save_path):
 
 if __name__ == "__main__":
     # Replace the following URL and save_path with your desired values
-    download_url = "http://fs17.megadb.xyz:8080/d/5lnizvyoy5vxygoid7w3pc2bmbrr2eoqt6x5q2tf53u4o64dqu5nllryb5z2bh5qipuvsiid/Need-for-Speed-Payback-SteamRIP.com.rar"
-    save_file_path = "./file.rar"
+    download_url = input('Enter the Url: ')
+    file_name = input("Enter file name with extension: ")
+    save_file_path = f"./{file_name}"
 
     download_rar_file(download_url, save_file_path)
